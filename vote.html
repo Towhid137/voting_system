@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIDC ভোটিং - ভোট দিন</title>
+  <style>
+    body { font-family: Arial; max-width:600px; margin:30px auto; padding:16px; }
+    .card { border:1px solid #ddd; padding:20px; border-radius:8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+    button { padding:8px 12px; border:none; border-radius:6px; background:#1f8ef1; color:#fff; cursor:pointer; margin:4px 0; width:100%; }
+  </style>
+</head>
+<body>
+  <h2>SIDC ভোটিং</h2>
+  <div class="card" id="voteCard">
+    <h3>ভোট দিন</h3>
+    <div id="voteOptions"></div>
+    <button onclick="logout()">লগআউট</button>
+  </div>
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://sidc-voting-default-rtdb.firebaseio.com/",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const memberId = sessionStorage.getItem("memberId");
+    if(!memberId){ alert("প্রথমে লগইন করুন"); window.location.href="index.html"; }
+
+    // load vote options
+    const voteDiv = document.getElementById("voteOptions");
+    db.ref("votes").get().then(snap=>{
+      const votes = snap.val();
+      voteDiv.innerHTML = "";
+      for(let candidate in votes){
+        const btn = document.createElement("button");
+        btn.textContent = candidate;
+        btn.onclick = ()=>submitVote(candidate);
+        voteDiv.appendChild(btn);
+      }
+    });
+
+    function submitVote(candidate){
+      db.ref("votingOpen").get().then(snap=>{
+        if(!snap.val()){ alert("ভোটিং বন্ধ হয়েছে"); return; }
+
+        db.ref("votedIds/" + memberId).get().then(s=>{
+          if(s.exists()){ alert("আপনি ইতিমধ্যেই ভোট দিয়েছেন!"); return; }
+
+          // vote transaction
+          db.ref("votes/" + candidate).transaction(current => (current||0)+1);
+          db.ref("votedIds/" + memberId).set(candidate);
+
+          alert("ভোট সফলভাবে জমা হয়েছে!");
+          window.location.href = "results.html";
+        });
+      });
+    }
+
+    function logout(){
+      sessionStorage.removeItem("memberId");
+      window.location.href="index.html";
+    }
+  </script>
+</body>
+</html>
