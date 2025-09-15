@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIDC ভোটিং - লগইন</title>
+  <style>
+    body { font-family: Arial; max-width:600px; margin:30px auto; padding:16px; }
+    .card { border:1px solid #ddd; padding:20px; border-radius:8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+    input { padding:8px; width:100%; margin-bottom:12px; }
+    button { padding:8px 12px; border:none; border-radius:6px; background:#1f8ef1; color:#fff; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h2>SIDC ভোটিং</h2>
+  <div class="card">
+    <h3>লগইন</h3>
+    <input type="text" id="memberId" placeholder="আপনার ID লিখুন">
+    <button onclick="login()">ভোট দিতে যান</button>
+  </div>
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://sidc-voting-default-rtdb.firebaseio.com/",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function login(){
+      const id = document.getElementById("memberId").value.trim();
+      if(!id){ alert("ID লিখুন"); return; }
+      db.ref("voters/" + id).get().then(snapshot=>{
+        if(snapshot.exists()){
+          sessionStorage.setItem("memberId", id);
+          window.location.href = "vote.html";
+        } else {
+          alert("আপনি অনুমোদিত নন!");
+        }
+      });
+    }
+  </script>
+</body>
+  </html>
